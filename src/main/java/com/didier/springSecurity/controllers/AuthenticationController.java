@@ -2,6 +2,7 @@ package com.didier.springSecurity.controllers;
 
 import com.didier.springSecurity.dtos.LoginUserDto;
 import com.didier.springSecurity.dtos.RegisterUserDto;
+import com.didier.springSecurity.dtos.RefreshTokenDto;
 import com.didier.springSecurity.entities.User;
 import com.didier.springSecurity.repositories.UserRepository;
 import com.didier.springSecurity.services.AuthenticationService;
@@ -42,7 +43,6 @@ public class AuthenticationController {
             role = authenticationService.getUserRole(authenticatedUser.getEmail());
         }
 
-
         LoginResponse loginResponse;
         if (role != null) {
             loginResponse = new LoginResponse()
@@ -58,12 +58,19 @@ public class AuthenticationController {
         return ResponseEntity.ok(loginResponse);
     }
 
-
     @GetMapping("/users")
     public ResponseEntity<User> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
         User currentUser = userRepository.findByEmail(userEmail).orElse(null);
         return ResponseEntity.ok(currentUser);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenDto refreshTokenDto) {
+        String expiredToken = refreshTokenDto.getExpiredToken();
+        RefreshTokenResponse refreshTokenResponse = authenticationService.refreshToken(expiredToken);
+
+        return ResponseEntity.ok(refreshTokenResponse);
     }
 }
